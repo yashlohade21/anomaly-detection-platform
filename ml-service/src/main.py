@@ -1,17 +1,22 @@
 import logging
+import os
+import sys
 import threading
 from collections import deque
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import List
 
+# Ensure src/ is on the path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from fastapi import FastAPI, HTTPException
 
-from src.config import ML_BUFFER_SIZE, ML_RETRAIN_INTERVAL
-from src.detector.isolation_forest import IsolationForestDetector
-from src.kafka_consumer import MetricsConsumer
-from src.kafka_producer import AnomalyProducer
-from src.models import (
+from config import ML_BUFFER_SIZE, ML_RETRAIN_INTERVAL
+from detector.isolation_forest import IsolationForestDetector
+from kafka_consumer import MetricsConsumer
+from kafka_producer import AnomalyProducer
+from models import (
     AnomalyEvent,
     DetectRequest,
     DetectResponse,
@@ -74,16 +79,16 @@ def _handle_event(event: EnrichedMetricEvent) -> None:
             anomaly_score, event.z_score
         )
         anomaly = AnomalyEvent(
-            metric_id=event.metric_id,
-            service_name=event.service_name,
-            metric_name=event.metric_name,
+            event_id=event.event_id,
+            source_id=event.source_id,
+            metric_type=event.metric_type,
             value=event.value,
             timestamp=event.timestamp,
             anomaly_score=round(anomaly_score, 6),
             z_score=round(event.z_score, 6),
             severity=severity,
             confidence=round(confidence, 6),
-            model_used="IsolationForest",
+            model_used="isolation_forest",
             detected_at=datetime.utcnow().isoformat() + "Z",
         )
 
@@ -91,10 +96,10 @@ def _handle_event(event: EnrichedMetricEvent) -> None:
             producer.publish(anomaly)
             anomalies_detected += 1
             logger.info(
-                "ANOMALY DETECTED | service=%s metric=%s value=%.4f "
+                "ANOMALY DETECTED | source=%s metric=%s value=%.4f "
                 "score=%.4f z=%.4f severity=%s confidence=%.4f",
-                anomaly.service_name,
-                anomaly.metric_name,
+                anomaly.source_id,
+                anomaly.metric_type,
                 anomaly.value,
                 anomaly.anomaly_score,
                 anomaly.z_score,
@@ -171,9 +176,9 @@ async def detect(request: DetectRequest):
         )
 
     event = EnrichedMetricEvent(
-        metric_id=request.metric_id,
-        service_name=request.service_name,
-        metric_name=request.metric_name,
+        event_id=request.event_id,
+        source_id=request.source_id,
+        metric_type=request.metric_type,
         value=request.value,
         timestamp=request.timestamp or datetime.utcnow().isoformat() + "Z",
         z_score=request.z_score,

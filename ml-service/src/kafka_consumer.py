@@ -4,8 +4,8 @@ from typing import Callable, Optional
 
 from confluent_kafka import Consumer, KafkaError, KafkaException
 
-from src.config import KAFKA_BROKER, TOPIC_ENRICHED_METRICS
-from src.models import EnrichedMetricEvent
+from config import KAFKA_BROKER, TOPIC_ENRICHED_METRICS
+from models import EnrichedMetricEvent
 
 logger = logging.getLogger(__name__)
 

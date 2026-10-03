@@ -1,11 +1,10 @@
-import json
 import logging
 from typing import Optional
 
 from confluent_kafka import Producer
 
-from src.config import KAFKA_BROKER, TOPIC_ANOMALY_EVENTS
-from src.models import AnomalyEvent
+from config import KAFKA_BROKER, TOPIC_ANOMALY_EVENTS
+from models import AnomalyEvent
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +50,7 @@ class AnomalyProducer:
         self._producer.produce(
             topic=self._topic,
             value=payload.encode("utf-8"),
-            key=event.metric_id.encode("utf-8"),
+            key=event.event_id.encode("utf-8"),
             callback=self._delivery_callback,
         )
         self._producer.poll(0)

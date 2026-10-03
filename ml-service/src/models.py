@@ -13,35 +13,38 @@ class Severity(str, Enum):
 
 
 class EnrichedMetricEvent(BaseModel):
-    metric_id: str
-    service_name: str
-    metric_name: str
+    event_id: str
+    source_id: str
+    metric_type: str
     value: float
+    unit: Optional[str] = None
     timestamp: str
-    z_score: float
-    rolling_mean: Optional[float] = None
-    rolling_std: Optional[float] = None
-    tags: Optional[dict] = None
+    metadata: Optional[dict] = None
+    z_score: float = 0.0
+    baseline_mean: Optional[float] = None
+    baseline_stddev: Optional[float] = None
+    time_bucket: Optional[str] = None
+    is_duplicate: Optional[bool] = False
 
 
 class AnomalyEvent(BaseModel):
-    metric_id: str
-    service_name: str
-    metric_name: str
+    event_id: str
+    source_id: str
+    metric_type: str
     value: float
     timestamp: str
     anomaly_score: float = Field(ge=0.0, le=1.0)
     z_score: float
     severity: Severity
     confidence: float = Field(ge=0.0, le=1.0)
-    model_used: str = "IsolationForest"
+    model_used: str = "isolation_forest"
     detected_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
 
 
 class DetectRequest(BaseModel):
-    metric_id: str = "manual"
-    service_name: str = "manual"
-    metric_name: str = "manual"
+    event_id: str = "manual"
+    source_id: str = "manual"
+    metric_type: str = "manual"
     value: float
     z_score: float
     timestamp: Optional[str] = None

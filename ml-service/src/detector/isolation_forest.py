@@ -5,7 +5,7 @@ from typing import List, Tuple
 import numpy as np
 from sklearn.ensemble import IsolationForest
 
-from src.models import EnrichedMetricEvent, Severity
+from models import EnrichedMetricEvent, Severity
 
 logger = logging.getLogger(__name__)
 
@@ -60,14 +60,8 @@ class IsolationForestDetector:
             raw_score = self._model.decision_function(features)[0]
             prediction = self._model.predict(features)[0]
 
-        # Normalize decision_function output to 0-1 range.
-        # decision_function returns negative values for anomalies and positive
-        # for inliers. We map this so that higher anomaly_score = more anomalous.
-        # Typical raw scores fall roughly in [-0.5, 0.5]; we clamp after mapping.
         anomaly_score = max(0.0, min(1.0, 0.5 - raw_score))
-
         confidence = abs(anomaly_score - 0.5) * 2.0
-
         is_anomaly = prediction == -1
 
         return is_anomaly, anomaly_score, confidence

@@ -1,9 +1,13 @@
 """Data Simulator -- generates realistic server metrics and publishes them to Kafka."""
 
 import logging
+import os
 import signal
 import sys
 import time
+
+# Ensure src/ is on the path so all modules resolve regardless of working directory.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from config import Config
 from kafka_producer import MetricProducer
